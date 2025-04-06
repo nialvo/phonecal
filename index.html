@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Device Orientation Debugger</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    pre { font-size: 1.2rem; }
+    button { padding: 0.5rem 1rem; font-size: 1rem; }
+  </style>
+</head>
+<body>
+  <h2>Device Orientation Debugger</h2>
+  <pre id="output">Waiting for data...</pre>
+  <button id="recalibrate">Recalibrate</button>
+
+  <script>
+    let calibration = { alpha: 0, beta: 0, gamma: 0 };
+    const output = document.getElementById("output");
+    const btn = document.getElementById("recalibrate");
+
+    btn.addEventListener("click", () => {
+      if (lastOrientation) {
+        calibration.alpha = lastOrientation.alpha || 0;
+        calibration.beta = lastOrientation.beta || 0;
+        calibration.gamma = lastOrientation.gamma || 0;
+      }
+    });
+
+    let lastOrientation = null;
+
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener("deviceorientation", (e) => {
+        lastOrientation = e;
+
+        const raw = {
+          alpha: e.alpha?.toFixed(1),
+          beta: e.beta?.toFixed(1),
+          gamma: e.gamma?.toFixed(1),
+        };
+
+        const calibrated = {
+          alpha: ((e.alpha || 0) - calibration.alpha).toFixed(1),
+          beta: ((e.beta || 0) - calibration.beta).toFixed(1),
+          gamma: ((e.gamma || 0) - calibration.gamma).toFixed(1),
+        };
+
+        output.textContent = `
+Raw:
+  Alpha (Yaw) : ${raw.alpha}°
+  Beta  (Pitch): ${raw.beta}°
+  Gamma (Roll) : ${raw.gamma}°
+
+Calibrated (Zeroed):
+  Alpha (Yaw) : ${calibrated.alpha}°
+  Beta  (Pitch): ${calibrated.beta}°
+  Gamma (Roll) : ${calibrated.gamma}°
+        `.trim();
+      });
+    } else {
+      output.textContent = "DeviceOrientationEvent not supported.";
+    }
+  </script>
+</body>
+</html>
